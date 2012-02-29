@@ -1,6 +1,6 @@
 /* Control: PORTD */
-#define KS0108_CTRL PORTD
-#define KS0108_CTRL_DIR DDRD
+#define KS0108_CTRL PORTC
+#define KS0108_CTRL_DIR DDRC
 #define RS (1 << 0)
 #define RW (1 << 1)
 #define CS1 (1 << 3)

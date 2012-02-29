@@ -1,0 +1,15 @@
+Wheel Display project
+
+USB message format
+
+OUT:
+	gear: 4b
+	rpm: 15b
+	speed:  9b
+	fuel: 7b
+	lap: 8b
+	--
+	total: 33b
+
+IN:
+	mic data: 12/8 b

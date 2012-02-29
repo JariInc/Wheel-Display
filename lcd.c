@@ -1,4 +1,5 @@
-#include <stdlib.h> 
+#include <stdlib.h>
+#include <string.h>
 #include "font8.h"
 #include "font16.h"
 #include "font40.h"
@@ -8,76 +9,130 @@
 #include "mcp3204.h"
 #include "mcp23s17.h"
 
-extern volatile uint8_t outputwidth;
-extern volatile uint16_t speed;
-extern volatile uint8_t speed_width;
-extern volatile uint8_t rpm_width;
-extern volatile uint16_t rpm;
+/* debug stuff */
+#include "timer.h"
+extern volatile buttons btns;
+
+extern volatile LCDtext speed;
+extern volatile LCDtext rpm;
 extern volatile uint8_t rpmleds;
-extern volatile uint8_t gear;
+extern volatile LCDtext gear;
 
 void LCDinit() {
 	ks0108_init();
 
+	LCDtext t;
+	t.redraw = 1;
+	t.font = FONT_SMALL;
+
 	// 1st line
-	LCD_writestring(28, 0, "rpm", 3, 0);
-	LCD_writestring(80, 0, "speed", 5, 0);
+	t.x = 28;
+	t.y = 0;
+	t.redraw = TRUE;
+	t.len = 3;
+	strcpy(t.text, "rpm");
+	LCD_writestring(&t);
+
+	t.x = 80;
+	t.redraw = TRUE;
+	t.len = 5;
+	strcpy(t.text, "speed\0");
+	LCD_writestring(&t);
+
+
 	// 2nd line
-	LCD_writestring(28, 3, "fuel", 4, 0);
-	LCD_writestring(80, 3, "lap", 3, 0);
+	t.x = 28;
+	t.y = 3;
+	t.redraw = TRUE;
+	t.len = 4;
+	strcpy(t.text, "fuel\0");
+	LCD_writestring(&t);
+
+	t.x = 80;
+	t.redraw = TRUE;
+	t.len = 3;
+	strcpy(t.text, "lap\0");
+	LCD_writestring(&t);
 
 	// 3rd line
-	LCD_writestring(0, 6, "laptime", 7, 0);
+	t.x = 0;
+	t.y = 6;
+	t.redraw = TRUE;
+	t.len = 7;
+	strcpy(t.text, "laptime\0");
+	LCD_writestring(&t);
 
 	// data
-	LCD_writeint(80, 1, speed, 3, 1); // speed
-	LCD_writeint(28, 4, 90, 4, 1); // fuel
-	LCD_writeint(80, 4, 42, 4, 1); // lap
+	t.font = FONT_LARGE;
+	t.x = 28;
+	t.y = 4;
+	t.redraw = TRUE;
+	t.len = 0;
+	t.number = 90;
+	LCD_writestring(&t); // fuel
 
-	LCD_writegear(gear);
+	t.number = 42;
+	t.x = 80;
+	t.redraw = TRUE;
+	LCD_writestring(&t); // lap
+
 	//LCDdrawGraticule(0);
 
+	speed.x = 80;
+	speed.y = 1;
+	speed.redraw = TRUE;
+	speed.font = FONT_LARGE;
+	LCD_writestring(&speed);
+
+	rpm.x = 28;
+	rpm.y = 1;
+	rpm.redraw = TRUE;
+	rpm.font = FONT_LARGE;
+	LCD_writestring(&rpm);
+
+	gear.x = 0;
+	gear.y = 0;
+	gear.redraw = TRUE;
+	gear.font = FONT_HUGE;
+	LCD_writestring(&gear);
 }
 
 void LCDloop() {
 	uint16_t inc = ADCGetValue(0);
-	
-	//USART_Transmit((char)ADCGetValue(0));
-	//GPIOWrite(0x00, (char)ADCGetValue(0));
 
-	rpmleds = 0xff >> (7 - (rpm >> 10));
+	rpmleds = 0xff >> (7 - ((rpm.number) >> 10));
 	GPIOWrite(0x00, rpmleds);
 
 	// speed
-	outputwidth = LCD_writeint(80, 1, speed, 3, 1);
-	if(speed_width > outputwidth) {
-		ks0108_clear_range(1, 2, outputwidth, speed_width);
-	}
-	speed_width = outputwidth;
+	if(speed.number < 300)
+		speed.number++;
+	else
+		speed.number = 0;
 
-	// gear
-	if(rpm > (1 << 13)) {
-		LCD_writegear(gear++ & 8);
-		rpm = 3000;
-	}
+	speed.redraw = TRUE;
+	LCD_writestring(&speed);
 	
 	// rpm
-	outputwidth = LCD_writeint(28, 1, rpm, 5, 1);
-	// clear the remainder
-	if(rpm_width > outputwidth) {
-		ks0108_clear_range(1, 2, outputwidth, rpm_width);
+	rpm.number += (inc >> 4);
+	rpm.redraw = TRUE;
+	LCD_writestring(&rpm);
+
+	// gear
+	if(rpm.number > 8250) {
+		gear.number++;
+		gear.number &= 7;
+		gear.redraw = TRUE;
+		LCD_writestring(&gear);
+		rpm.number = 1000;
 	}
 
-	rpm_width = outputwidth;
-	rpm += (inc >> 4);
+	ks0108_clear_range(7, 7, 0, 127);
+	LCDtext dump = {0, 7, 0, 0, 1, FONT_SMALL, inc, ""};
+	LCD_writestring(&dump);
 
-	ks0108_clear_range(7, 7, 0, 4*6);
-	LCD_writeint(0, 7, inc, 4, 0);
-
-	if(speed < 300)
-		speed++;
-	else
-		speed = 0;
+	dump.x = 28;
+	dump.number = btns.state;
+	LCD_writestring(&dump);
 }
 
 uint8_t LCD_writechar_8(uint8_t x, uint8_t page, uint8_t character) {
@@ -168,7 +223,80 @@ uint8_t LCD_writechar_16(uint8_t x, uint8_t page, uint8_t character) {
 		
 }
 
-uint8_t LCD_writestring(uint8_t x, uint8_t page, char *string, uint8_t len, uint8_t large /*, uint8_t raling */) {
+void LCD_writestring(LCDtext *t) {
+
+	if(t->redraw) {
+		uint8_t i = 0;
+		uint8_t isnum = FALSE;
+		uint8_t x = t->x;
+
+		if(t->len < 1) {
+			utoa(t->number, t->text, 0x0a);
+			if(t->number < 10)
+				t->len = 1;
+			else if(t->number < 100)
+				t->len = 2;
+			else if(t->number < 1000)
+				t->len = 3;
+			else if(t->number < 1000)
+				t->len = 4;
+			else
+				t->len = 5;
+		
+			isnum = TRUE;
+		}
+
+		for(i=0; i < t->len; i++) {
+			switch(t->font) {
+				case FONT_LARGE:
+					if(t->text[i] > 0x2f && t->text[i] < 0x3a)
+						x = LCD_writechar_16(x, t->y, (t->text[i] - 0x30));
+					break;
+				case FONT_SMALL:
+					if((t->text[i] > 0x60) && (t->text[i] < 0x7b))
+						x = LCD_writechar_8(x, t->y, (t->text[i] - 0x61));
+					else if((t->text[i] > 0x2f) && (t->text[i] < 0x3a))
+						x = LCD_writechar_8(x, t->y, (t->text[i] - 0x16));
+					else if(t->text[i] == 0x20)
+						x++;
+					else if(t->text[i] == 0x2e)
+						x = LCD_writechar_8(x, t->y, 36);
+					else if(t->text[i] == 0x3a)
+						x = LCD_writechar_8(x, t->y, 37);
+					break;
+				case FONT_HUGE:
+					if(t->text[i] > 0x2f && t->text[i] < 0x3a)
+						/*x = */LCD_writegear(t->number);
+					break;
+			}
+			 // space between chars
+			//x++;
+		}
+
+		// keep number field as is
+		if(isnum)
+			t->len = 0;
+	
+		// check if clean up needed
+		if(x < (t->x+t->width)) {
+			switch(t->font) {
+				case FONT_SMALL:
+					ks0108_clear_range(t->y, t->y, x, (t->x+t->width));
+					break;
+				case FONT_LARGE:
+					ks0108_clear_range(t->y, (t->y)+1, x, (t->x+t->width));
+					break;
+			}
+		}
+
+		// save
+		t->width = x - t->x;
+		t->redraw = FALSE;
+	}
+}
+
+/*
+uint8_t LCD_writestring(uint8_t x, uint8_t page, char *string, uint8_t len, uint8_t large) {
 
 	uint8_t i = 0;
 
@@ -200,14 +328,14 @@ uint8_t LCD_writestring(uint8_t x, uint8_t page, char *string, uint8_t len, uint
 
 uint8_t LCD_writeint(uint8_t x, uint8_t page, uint16_t value, uint8_t len, uint8_t large) {
 
-	char str[6];
+	LCDtext t { 5, 1,  };
 
 	utoa(value, str, 0x0a);
 
 	return LCD_writestring(x, page, str, len, large);
 
 }
-
+*/
 void LCD_writegear(uint8_t gear) {
 
 	ks0108_clear_range(0, 5, 0, 25);

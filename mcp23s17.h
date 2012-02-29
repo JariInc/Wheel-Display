@@ -1,3 +1,4 @@
 void GPIOWrite(unsigned char a, unsigned char b);
-char GPIOReadReg(unsigned char addr);
+char GPIORead(uint8_t bank);
 void GPIOInit();
+void GPIOSetDir(char a, char b);
