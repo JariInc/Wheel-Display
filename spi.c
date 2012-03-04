@@ -1,3 +1,7 @@
+#include <avr/interrupt.h>
+#include <avr/io.h>
+#include <util/atomic.h>
+
 #include "spi.h"
 // ATMega16 datasheet, page 138 
 
@@ -21,10 +25,10 @@ void SPI_MasterInit(void) {
 }
 
 char SPI_MasterTransmit(char cData){ 
-	cli();
+	ATOMIC_BLOCK(ATOMIC_FORCEON) {
     SPDR  = cData;          		// send Character
     while (!(SPSR & (1<<SPIF)));   // wait until Char is sent
-	sei();
+	}
 	return SPDR;
 }
 
