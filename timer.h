@@ -9,6 +9,6 @@ typedef struct {
 
 extern volatile buttons btns;
 
-void TimerInit(void);
+void TimerInit(uint8_t timer);
 void TimerSet(uint8_t timer, uint16_t val);
 void TimerSetFreq(uint8_t timer, uint16_t freq);

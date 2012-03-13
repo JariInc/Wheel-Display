@@ -32,15 +32,15 @@ uint8_t ks0108_readdata(uint8_t controller, uint8_t status) {
 
 	ks0108_controller_enable(controller);
 
-	ks0108_DATA = 0x00;
-	ks0108_DATA_DIR = 0x00;
+	KS0108_DATA = 0x00;
+	KS0108_DATA_DIR = 0x00;
 	KS0108_CTRL |= RW;
 
 	if(status != 0) { // read LCD status
 		KS0108_CTRL &= ~RS;	
 		KS0108_CTRL |= EN;
 		asm volatile ("nop");
-		data = ks0108_DATA;
+		data = KS0108_DATA;
 		KS0108_CTRL &= ~EN;
 	}
 	else {			// read data RAM
@@ -62,7 +62,7 @@ uint8_t ks0108_readdata(uint8_t controller, uint8_t status) {
 		// wait data fetch
 		while(ks0108_readdata(controller, 1) & 0x80);
 
-		data = ks0108_DATA;
+		data = KS0108_DATA;
 	}
 
 	ks0108_controller_disable(controller);
@@ -76,7 +76,7 @@ void ks0108_instruction(uint8_t controller, uint8_t instruction, uint8_t data) {
 
 	ks0108_controller_enable(controller);
 
-	ks0108_DATA_DIR = 0xff;
+	KS0108_DATA_DIR = 0xff;
 	KS0108_CTRL &= ~RW;
 
 	if(data != 0)	// write data RAM
@@ -84,7 +84,7 @@ void ks0108_instruction(uint8_t controller, uint8_t instruction, uint8_t data) {
 	else			// write LCD instruction
 		KS0108_CTRL &= ~RS;
 
-	ks0108_DATA = instruction;
+	KS0108_DATA = instruction;
 
 	KS0108_CTRL |= EN;
 	asm volatile ("nop");

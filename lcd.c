@@ -98,7 +98,8 @@ void LCDinit() {
 }
 
 void LCDloop() {
-	uint16_t inc = ADCGetValue(0);
+/*
+	uint16_t inc = 127; //ADCGetValue(0);
 
 	rpmleds = 0xff >> (7 - ((rpm.number) >> 10));
 	GPIOWrite(0x00, rpmleds);
@@ -125,14 +126,18 @@ void LCDloop() {
 		LCD_writestring(&gear);
 		rpm.number = 1000;
 	}
-
+*/
+/*
+	// adc
 	ks0108_clear_range(7, 7, 0, 127);
 	LCDtext dump = {0, 7, 0, 0, 1, FONT_SMALL, inc, ""};
 	LCD_writestring(&dump);
 
 	dump.x = 28;
-	dump.number = btns.state;
+	dump.number = 0; //ADCGetValue(1);
+	dump.redraw = TRUE;
 	LCD_writestring(&dump);
+*/
 }
 
 uint8_t LCD_writechar_8(uint8_t x, uint8_t page, uint8_t character) {

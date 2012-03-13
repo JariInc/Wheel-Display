@@ -1,4 +1,5 @@
 #include <avr/io.h>
+#include <util/delay.h>
 #include "mcp23s17.h"
 #include "spi.h"
 
@@ -30,11 +31,10 @@ void GPIOInit() {
 void GPIOSetDir(char banka, char bankb) { // 0 = output, 1 = input
 	SPI_SelectSlave(SPIGPIO);
 	SPI_MasterTransmit(0x40); // chip select, write
-	SPI_MasterTransmit(0x00); // addr: 0x00
+	SPI_MasterTransmit(0x01); // addr: 0x00
 	SPI_MasterTransmit(banka); // IODIRA = 0x00 (out)
 	SPI_MasterTransmit(bankb); // IODIRB = 0x00
 	SPI_UnselectAllSlaves();
-
 
 	SPI_SelectSlave(SPIGPIO);
 	SPI_MasterTransmit(0x40); // chip select, write

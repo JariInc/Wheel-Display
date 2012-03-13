@@ -1,15 +1,16 @@
 /* Control: PORTD */
 #define KS0108_CTRL PORTC
 #define KS0108_CTRL_DIR DDRC
-#define RS (1 << 0)
-#define RW (1 << 1)
-#define CS1 (1 << 3)
-#define CS2 (1 << 2)
-#define EN (1 << 5)
+
+#define RS (1 << 4)
+#define RW (1 << 2)
+#define CS1 (1 << 6)
+#define CS2 (1 << 5)
+#define EN (1 << 7)
 
 /* Data: PORTA */
-#define ks0108_DATA PORTA
-#define ks0108_DATA_DIR DDRA
+#define KS0108_DATA PORTD
+#define KS0108_DATA_DIR DDRD
 
 void ks0108_controller_disable(uint8_t i);
 void ks0108_controller_enable(uint8_t i);
