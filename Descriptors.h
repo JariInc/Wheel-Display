@@ -38,7 +38,6 @@
 
 	/* Includes: */
 		#include <LUFA/Drivers/USB/USB.h>
-
 		#include <avr/pgmspace.h>
 
 	/* Macros: */
@@ -50,6 +49,13 @@
 		 *  USB AVR models will result in unavoidable distorted output.
 		 */
 		#define AUDIO_STREAM_EPSIZE          ENDPOINT_MAX_SIZE(AUDIO_STREAM_EPNUM)
+
+		/** Endpoint number of the Joystick HID reporting IN endpoint. */
+		#define JOYSTICK_EPNUM               1
+
+		/** Size in bytes of the Joystick HID reporting IN endpoint. */
+		#define JOYSTICK_EPSIZE              8
+
 
 	/* Type Defines: */
 		/** Type define for the device configuration descriptor structure. This must be defined in the
@@ -74,6 +80,13 @@
 			USB_Audio_SampleFreq_t                    Audio_AudioFormatSampleRates[1];
 			USB_Audio_Descriptor_StreamEndpoint_Std_t Audio_StreamEndpoint;
 			USB_Audio_Descriptor_StreamEndpoint_Spc_t Audio_StreamEndpoint_SPC;
+
+			// Joystick HID Interface
+			USB_Descriptor_Interface_t            HID_Interface;
+			USB_HID_Descriptor_HID_t              HID_JoystickHID;
+	        USB_Descriptor_Endpoint_t             HID_ReportINEndpoint;
+
+
 		} USB_Descriptor_Configuration_t;
 
 	/* Function Prototypes: */

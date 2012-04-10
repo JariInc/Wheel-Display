@@ -1,6 +1,9 @@
 #include <avr/io.h>
 
-#define SPI_BUFFER_SIZE 32
+#define SPILCD 0
+#define SPILCD_PORT PORTB
+#define SPILCD_DDR DDRB
+#define SPILCD_PIN PB0
 
 #define SPIGPIO 1
 #define SPIGPIO_PORT PORTB

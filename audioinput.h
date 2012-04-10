@@ -50,8 +50,7 @@
 	/* Macros: */
 
 	/* Function Prototypes: */
-		void SetupHardware(void);
-		void USBloop(void);
+		void SetupAudioHardware(void);
 
 		void EVENT_USB_Device_Connect(void);
 		void EVENT_USB_Device_Disconnect(void);

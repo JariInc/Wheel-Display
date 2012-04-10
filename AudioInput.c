@@ -36,7 +36,6 @@
 
 #include "AudioInput.h"
 #include "mcp3204.h"
-#include "lcd.h"
 
 /** LUFA Audio Class driver interface configuration and state information. This structure is
  *  passed to all Audio Class driver functions, so that multiple instances of the same class
@@ -59,21 +58,8 @@ static uint32_t CurrentAudioSampleFrequency = 8000;
 /** */
 uint16_t LCDskip = 0;
 
-/** Main program entry point. This routine contains the overall program flow, including initial
- *  setup of all components and the main program loop.
- */
-void USBloop(void)
-{
-	sei();
-	for (;;)
-	{
-		Audio_Device_USBTask(&Microphone_Audio_Interface);
-		USB_USBTask();
-	}
-}
-
 /** Configures the board hardware and chip peripherals for the demo's functionality. */
-void SetupHardware(void)
+void SetupAudioHardware(void)
 {
 	/* Disable watchdog if enabled by bootloader/fuses */
 	MCUSR &= ~(1 << WDRF);
@@ -94,16 +80,13 @@ ISR(TIMER0_COMPA_vect, ISR_BLOCK)
 	/* Check that the USB bus is ready for the next sample to write */
 	if (Audio_Device_IsReadyForNextSample(&Microphone_Audio_Interface))
 	{
-		Audio_Device_WriteSample16(&Microphone_Audio_Interface, (ADCGetValue(0) + 6400) << 3);
+		//Audio_Device_WriteSample16(&Microphone_Audio_Interface, (ADCGetValue(0) + 6400) << 3);
+		//Audio_Device_WriteSample8(&Microphone_Audio_Interface, (ADCGetValue(0) + 6400) >> 5);
+		uint16_t sample = ADCGetValue(1) >> 4;
+		Audio_Device_WriteSample16(&Microphone_Audio_Interface, ((ADCGetValue(0) >> 4) & 0xff) | (sample << 8));
 	}
 
 	Endpoint_SelectEndpoint(PrevEndpoint);
-
-	if(++LCDskip > (CurrentAudioSampleFrequency)) {
-		LCDloop();
-		LCDskip = 0;
-	}
-	
 }
 
 /** Event handler for the library USB Connection event. */

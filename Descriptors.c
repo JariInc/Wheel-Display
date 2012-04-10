@@ -37,6 +37,37 @@
 
 #include "Descriptors.h"
 
+/* On some devices, there is a factory set internal serial number which can be automatically sent to the host as
+ * the device's serial number when the Device Descriptor's .SerialNumStrIndex entry is set to USE_INTERNAL_SERIAL.
+ * This allows the host to track a device across insertions on different ports, allowing them to retain allocated
+ * resources like COM port numbers and drivers. On demos using this feature, give a warning on unsupported devices
+ * so that the user can supply their own serial number descriptor instead or remove the USE_INTERNAL_SERIAL value
+ * from the Device Descriptor (forcing the host to generate a serial number for each device from the VID, PID and
+ * port location).
+ */
+#if (USE_INTERNAL_SERIAL == NO_DESCRIPTOR)
+	#warning USE_INTERNAL_SERIAL is not available on this AVR - please manually construct a device serial descriptor.
+#endif
+
+/** HID class report descriptor. This is a special descriptor constructed with values from the
+ *  USBIF HID class specification to describe the reports and capabilities of the HID device. This
+ *  descriptor is parsed by the host and its contents used to determine what data (and in what encoding)
+ *  the device will send, and what it may be sent back from the host. Refer to the HID specification for
+ *  more details on HID report descriptors.
+ */
+const USB_Descriptor_HIDReport_Datatype_t PROGMEM JoystickReport[] =
+{
+	/* Use the HID class driver's standard Joystick report.
+	 *   Number of Axis: 2 (X/Y)
+	 *   Min X/Y Axis values: -100
+	 *   Max X/Y Axis values:  100
+	 *   Min physical X/Y Axis values (used to determine resolution): -1
+	 *   Max physical X/Y Axis values (used to determine resolution):  1
+	 *   Buttons: 2
+	 */
+	HID_DESCRIPTOR_JOYSTICK(2, -100, 100, -1, 1, 2)
+};
+
 /** Device descriptor structure. This descriptor, located in FLASH memory, describes the overall
  *  device characteristics, including the supported USB version, control endpoint size and the
  *  number of device configurations. The descriptor is read out by the USB host when the enumeration
@@ -71,12 +102,13 @@ const USB_Descriptor_Device_t PROGMEM DeviceDescriptor =
  */
 const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor =
 {
+
 	.Config =
 		{
 			.Header                   = {.Size = sizeof(USB_Descriptor_Configuration_Header_t), .Type = DTYPE_Configuration},
 
 			.TotalConfigurationSize   = sizeof(USB_Descriptor_Configuration_t),
-			.TotalInterfaces          = 2,
+			.TotalInterfaces          = 2+1,
 
 			.ConfigurationNumber      = 1,
 			.ConfigurationStrIndex    = NO_DESCRIPTOR,
@@ -200,13 +232,14 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor =
 			.Channels                 = 0x01,
 
 			.SubFrameSize             = 0x02,
-			.BitResolution            = 8,
+			.BitResolution            = 16,
 
 			.TotalDiscreteSampleRates = (sizeof(ConfigurationDescriptor.Audio_AudioFormatSampleRates) / sizeof(USB_Audio_SampleFreq_t))
 		},
 
 	.Audio_AudioFormatSampleRates =
 		{
+			
 			AUDIO_SAMPLE_FREQ(8000),
 			/*
 			AUDIO_SAMPLE_FREQ(11025),
@@ -241,6 +274,43 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor =
 
 			.LockDelayUnits           = 0x00,
 			.LockDelay                = 0x0000
+		},
+
+	.HID_Interface =
+		{
+			.Header                 = {.Size = sizeof(USB_Descriptor_Interface_t), .Type = DTYPE_Interface},
+
+			.InterfaceNumber        = 2,
+			.AlternateSetting       = 0,
+
+			.TotalEndpoints         = 1,
+
+			.Class                  = HID_CSCP_HIDClass,
+			.SubClass               = HID_CSCP_NonBootSubclass,
+			.Protocol               = HID_CSCP_NonBootProtocol,
+
+			.InterfaceStrIndex      = NO_DESCRIPTOR
+		},
+
+	.HID_JoystickHID =
+		{
+			.Header                 = {.Size = sizeof(USB_HID_Descriptor_HID_t), .Type = HID_DTYPE_HID},
+
+			.HIDSpec                = VERSION_BCD(01.11),
+			.CountryCode            = 0x00,
+			.TotalReportDescriptors = 1,
+			.HIDReportType          = HID_DTYPE_Report,
+			.HIDReportLength        = sizeof(JoystickReport)
+		},
+
+	.HID_ReportINEndpoint =
+		{
+			.Header                 = {.Size = sizeof(USB_Descriptor_Endpoint_t), .Type = DTYPE_Endpoint},
+
+			.EndpointAddress        = (ENDPOINT_DIR_IN | JOYSTICK_EPNUM),
+			.Attributes             = (EP_TYPE_INTERRUPT | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+			.EndpointSize           = JOYSTICK_EPSIZE,
+			.PollingIntervalMS      = 0x01
 		}
 };
 
@@ -261,9 +331,9 @@ const USB_Descriptor_String_t PROGMEM LanguageString =
  */
 const USB_Descriptor_String_t PROGMEM ManufacturerString =
 {
-	.Header                 = {.Size = USB_STRING_LEN(11), .Type = DTYPE_String},
+	.Header                 = {.Size = USB_STRING_LEN(8), .Type = DTYPE_String},
 
-	.UnicodeString          = L"Dean Camera"
+	.UnicodeString          = L"@JariInc"
 };
 
 /** Product descriptor string. This is a Unicode string containing the product's details in human readable form,
@@ -272,9 +342,9 @@ const USB_Descriptor_String_t PROGMEM ManufacturerString =
  */
 const USB_Descriptor_String_t PROGMEM ProductString =
 {
-	.Header                 = {.Size = USB_STRING_LEN(18), .Type = DTYPE_String},
+	.Header                 = {.Size = USB_STRING_LEN(13), .Type = DTYPE_String},
 
-	.UnicodeString          = L"LUFA Audio In Demo"
+	.UnicodeString          = L"Wheel Display"
 };
 
 /** This function is called by the library when in device mode, and must be overridden (see library "USB Descriptors"
@@ -293,7 +363,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
 	const void* Address = NULL;
 	uint16_t    Size    = NO_DESCRIPTOR;
 
-	switch (DescriptorType)
+switch (DescriptorType)
 	{
 		case DTYPE_Device:
 			Address = &DeviceDescriptor;
@@ -320,6 +390,14 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
 					break;
 			}
 
+			break;
+		case HID_DTYPE_HID:
+			Address = &ConfigurationDescriptor.HID_JoystickHID;
+			Size    = sizeof(USB_HID_Descriptor_HID_t);
+			break;
+		case HID_DTYPE_Report:
+			Address = &JoystickReport;
+			Size    = sizeof(JoystickReport);
 			break;
 	}
 

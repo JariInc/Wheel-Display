@@ -4,7 +4,6 @@
 #include <util/delay.h> 
 
 #include "spi.h"
-// ATMega16 datasheet, page 138 
 
 void SPI_MasterInit(void) {
 	/* Set MOSI, CS and SCK output, MISO input */
@@ -12,12 +11,13 @@ void SPI_MasterInit(void) {
 	DDRB &= ~(1<<PB3);
 	
 	SPCR |= (1<<MSTR)|(1<<SPE)|(0<<SPR1)|(1<<SPR0);
-	SPSR |= (1<<SPI2X);
+	SPSR |= (0<<SPI2X);
 
 	char dump = SPSR; // clear SPIF bit in SPSR
     dump = SPDR;
 
-	/* Set all slave selects HIGH */
+	/* Set all slave selects output and high */
+	SPILCD_DDR |= (1<<SPILCD_PIN);
 	SPIGPIO_DDR |= (1<<SPIGPIO_PIN);
 	SPIADC_DDR |= (1<<SPIADC_PIN);
 	SPI_UnselectAllSlaves();
@@ -33,6 +33,7 @@ char SPI_MasterTransmit(char cData){
 
 
 void SPI_UnselectAllSlaves() {
+	SPILCD_PORT |= (1<<SPILCD_PIN);
 	SPIGPIO_PORT |= (1<<SPIGPIO_PIN);
 	SPIADC_PORT |= (1<<SPIADC_PIN);
 }
@@ -42,6 +43,9 @@ void SPI_SelectSlave(uint8_t slave) {
 	SPI_UnselectAllSlaves();
 	// set one
 	switch(slave) {
+		case SPILCD:
+			SPILCD_PORT &= ~(1<<SPILCD_PIN);
+			break;
 		case SPIGPIO:
 			SPIGPIO_PORT &= ~(1<<SPIGPIO_PIN);
 			break;

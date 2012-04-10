@@ -135,14 +135,14 @@ SRC = $(TARGET).c                                                 \
 	  Descriptors.c                                               \
 	  $(LUFA_SRC_USB)                                             \
 	  $(LUFA_SRC_USBCLASS) \
-		AudioInput.c \
-		ks0108.c \
-		lcd.c \
 		mcp3204.c \
 		mcp23s17.c \
 		spi.c \
-		timer.c
+		timer.c \
+		spilcd.c
 
+#		AudioInput.c \
+#		Joystick.c \
 
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC =

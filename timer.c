@@ -1,6 +1,6 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include "lcd.h"
+#include "spilcd.h"
 #include "timer.h"
 
 #define ONEHZ_T0 (F_CPU >> 8)
@@ -61,11 +61,12 @@ void TimerSetFreq(uint8_t timer, uint16_t freq) {
 	
 }
 
-// Timer 1
-ISR(TIMER1_COMPA_vect) {
-	// LCD content update 45Hz
-    LCDloop(); 
 
+
+// Timer 1
+
+ISR(TIMER1_COMPA_vect) {
+	LCDUpdate();
 	/*
 	// Button states
 	if(!btns.interrupt) {
