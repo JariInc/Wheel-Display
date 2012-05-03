@@ -1,38 +1,43 @@
 #include "spi.h"
+#include "types.h"
 
-#define TYPE_RPM 			0x00
-#define TYPE_SPEED 			0x01
-#define TYPE_FUEL 			0x02
-#define TYPE_FUEL_NEED 		0x03
-#define TYPE_LAP 			0x04
-#define TYPE_LAPS_REM 		0x05
-#define TYPE_POS 			0x06
-#define TYPE_LAPTIME 		0x10
-#define TYPE_DELTA 			0x11
-
-uint16_t debugges = 0;
+extern volatile uint16_t data[32];
 
 void LCDUpdateValue(uint8_t pos, uint8_t type, uint16_t value) {
-	SPI_SelectSlave(SPILCD);
-	SPI_MasterTransmit((pos << 5)|type);
-	//SPI_UnselectAllSlaves();
-	//SPI_SelectSlave(SPILCD);
-	SPI_MasterTransmit(value >> 8);
-	//SPI_UnselectAllSlaves();
-	//SPI_SelectSlave(SPILCD);
-	SPI_MasterTransmit(value & 0xff);
-	SPI_UnselectAllSlaves();
+
+	while (!(UCSR1A & (1<<UDRE1)));
+	UDR1 = (pos << 5)|type;
+	while (!(UCSR1A & (1<<UDRE1)));
+	UDR1 = value >> 8;
+	while (!(UCSR1A & (1<<UDRE1)));
+	UDR1 = value & 0xff;
+	while (!(UCSR1A & (1<<UDRE1)));
+
+	uint8_t i;
+	for(i = 0; i < 6; i++) {
+		while (!(UCSR1A & (1<<UDRE1)));
+		UDR1 = 0xff;
+	}
 }
 
+
 void LCDUpdate(void) {
-	//LCDUpdateValue(0, 0, 2);
-	SPI_SelectSlave(SPILCD);
-	asm volatile ("nop");
-	SPI_MasterTransmit(1);
-	asm volatile ("nop");
-	SPI_MasterTransmit(2);
-	asm volatile ("nop");
-	SPI_MasterTransmit(3);
-	asm volatile ("nop");
-	SPI_UnselectAllSlaves();
+
+	
+	LCDUpdateValue(0, 0, data[GEAR]++ & 7);
+
+	// row 1
+	LCDUpdateValue(1, RPM, data[RPM]++);
+	LCDUpdateValue(2, SPEED, 107);
+	
+	// row 2
+	LCDUpdateValue(3, FUEL, data[FUEL]);
+	LCDUpdateValue(4, LAP, data[LAP]);
+
+
+	// row 3
+	LCDUpdateValue(5, LAPTIME, data[LAPTIME]);
+	LCDUpdateValue(6, DELTA, data[DELTA]);
+
 }
+

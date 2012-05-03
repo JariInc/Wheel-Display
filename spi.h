@@ -17,5 +17,5 @@
 
 void SPI_MasterInit(void);
 char SPI_MasterTransmit(char cData);
-void SPI_UnselectAllSlaves();
+void SPI_UnselectAllSlaves(void);
 void SPI_SelectSlave(uint8_t slave);

@@ -24,7 +24,7 @@ char GPIORead(uint8_t bank) {
 }
 
 
-void GPIOInit() {
+void GPIOInit(void) {
 	GPIOSetDir(0x00, 0x00);
 }
 

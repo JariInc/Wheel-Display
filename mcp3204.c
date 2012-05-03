@@ -1,6 +1,6 @@
 #include "spi.h"
 
-void ADCinit() {
+void ADCinit(void) {
 	// just in case, push CS low for a while
 	SPI_SelectSlave(SPIADC);
 	SPI_UnselectAllSlaves();

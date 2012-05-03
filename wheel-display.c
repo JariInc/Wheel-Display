@@ -9,6 +9,13 @@
 #include "timer.h"
 #include "Joystick.h"
 #include "AudioInput.h"
+#include "types.h"
+
+// USART
+#define BAUD 38400
+#include <util/setbaud.h>
+
+volatile uint16_t data[32] = {0x0000};
 
 /** LUFA Audio Class driver interface configuration and state information. This structure is
  *  passed to all Audio Class driver functions, so that multiple instances of the same class
@@ -64,8 +71,15 @@ void EVENT_USB_Device_ConfigurationChanged(void)
 /** Event handler for the library USB Control Request reception event. */
 void EVENT_USB_Device_ControlRequest(void)
 {
-	HID_Device_ProcessControlRequest(&Joystick_HID_Interface);
-	Audio_Device_ProcessControlRequest(&Microphone_Audio_Interface);
+	if (USB_ControlRequest.bmRequestType == 64 && USB_ControlRequest.bRequest < sizeof(data)) {
+		//GPIOWrite(USB_ControlRequest.wValue, USB_ControlRequest.wValue >> 8);
+		data[USB_ControlRequest.bRequest] = USB_ControlRequest.wValue;
+		//LCDUpdateValue(2, SPEED, data[SPEED]);
+	}
+	else {
+		HID_Device_ProcessControlRequest(&Joystick_HID_Interface);
+		Audio_Device_ProcessControlRequest(&Microphone_Audio_Interface);
+	}
 }
 
 /** Event handler for the USB device Start Of Frame event. */
@@ -235,22 +249,6 @@ bool CALLBACK_Audio_Device_GetSetInterfaceProperty(USB_ClassInfo_Audio_Device_t*
 	return false;
 }
 
-volatile uint8_t dataToSend[] = {0xff, 0xfa, 0x01};
-
-/** Event handler for the USB_UnhandledControlRequest event. This is used to catch standard, class,
- *  and vendor specific control requests that are not handled internally by the USB library so that
- *  they can be handled appropriately for the application.
- */
-void EVENT_USB_Device_UnhandledControlRequest(void)
-{
-
-    /* TODO - Control Endpoint communication.  Just match up bRequest and bmRequestType values
-                            in your corresponding USB software to send and/or receive data.
-    */
-
-	GPIOWrite(0, 0);
-
-}
 /** HID class driver callback function for the processing of HID reports from the host.
  *
  *  \param[in] HIDInterfaceInfo  Pointer to the HID class interface configuration structure being referenced
@@ -265,16 +263,14 @@ void CALLBACK_HID_Device_ProcessHIDReport(USB_ClassInfo_HID_Device_t* const HIDI
                                           const void* ReportData,
                                           const uint16_t ReportSize)
 {
-	GPIOWrite(0, 0);
 }
 
-int main() {
+int main(void) {
 
-	/*
+	
 	UBRR1H = UBRRH_VALUE;
 	UBRR1L = UBRRL_VALUE;
 	UCSR1B = (1<<RXEN1)|(1<<TXEN1);
-	*/
 
 	// USB
 	/* Disable watchdog if enabled by bootloader/fuses */
@@ -297,9 +293,12 @@ int main() {
 	GPIOInit();
 	GPIOWrite(0xff, 0xff);
 	
+	
 	// Timer
 	TimerInit(TIMER1);
 	TimerSetFreq(TIMER1, 1);
+	
+	//DDRD |= (1<<PD4);
 
 	sei();
 	for (;;)

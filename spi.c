@@ -32,7 +32,7 @@ char SPI_MasterTransmit(char cData){
 }
 
 
-void SPI_UnselectAllSlaves() {
+void SPI_UnselectAllSlaves(void) {
 	SPILCD_PORT |= (1<<SPILCD_PIN);
 	SPIGPIO_PORT |= (1<<SPIGPIO_PIN);
 	SPIADC_PORT |= (1<<SPIADC_PIN);
@@ -40,7 +40,8 @@ void SPI_UnselectAllSlaves() {
 
 void SPI_SelectSlave(uint8_t slave) {
 	// clear all
-	SPI_UnselectAllSlaves();
+	// we trust our own code
+	//SPI_UnselectAllSlaves();
 	// set one
 	switch(slave) {
 		case SPILCD:
