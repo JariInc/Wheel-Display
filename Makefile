@@ -139,7 +139,8 @@ SRC = $(TARGET).c                                                 \
 		mcp23s17.c \
 		spi.c \
 		timer.c \
-		spilcd.c
+		uart.c\
+		uartlcd.c
 
 #		AudioInput.c \
 #		Joystick.c \

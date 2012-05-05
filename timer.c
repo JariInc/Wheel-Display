@@ -1,6 +1,6 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include "spilcd.h"
+#include "uartlcd.h"
 #include "timer.h"
 
 #define ONEHZ_T0 (F_CPU >> 8)

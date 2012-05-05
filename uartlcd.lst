@@ -1,0 +1,169 @@
+   1               		.file	"uartlcd.c"
+   2               	__SREG__ = 0x3f
+   3               	__SP_H__ = 0x3e
+   4               	__SP_L__ = 0x3d
+   5               	__CCP__  = 0x34
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+  15               	.Ltext0:
+  16               		.section	.text.LCDUpdateValue,"ax",@progbits
+  17               	.global	LCDUpdateValue
+  19               	LCDUpdateValue:
+  20               	.LFB2:
+  21               	.LSM0:
+  22               	.LVL0:
+  23 0000 0F93      		push r16
+  24 0002 1F93      		push r17
+  25               	/* prologue: function */
+  26               	/* frame size = 0 */
+  27 0004 8A01      		movw r16,r20
+  28               	.LVL1:
+  29               	.LSM1:
+  30 0006 8295      		swap r24
+  31               	.LVL2:
+  32 0008 880F      		lsl r24
+  33 000a 807E      		andi r24,lo8(-32)
+  34 000c 862B      		or r24,r22
+  35 000e 0E94 0000 		call uartTx
+  36               	.LVL3:
+  37               	.LSM2:
+  38 0012 812F      		mov r24,r17
+  39               	.LVL4:
+  40 0014 0E94 0000 		call uartTx
+  41               	.LSM3:
+  42 0018 802F      		mov r24,r16
+  43               	.LVL5:
+  44 001a 0E94 0000 		call uartTx
+  45               	.LSM4:
+  46 001e 8FEF      		ldi r24,lo8(-1)
+  47 0020 0E94 0000 		call uartTx
+  48               	.LSM5:
+  49 0024 8FEF      		ldi r24,lo8(-1)
+  50 0026 0E94 0000 		call uartTx
+  51               	.LSM6:
+  52 002a 8FEF      		ldi r24,lo8(-1)
+  53 002c 0E94 0000 		call uartTx
+  54               	/* epilogue start */
+  55               	.LSM7:
+  56 0030 1F91      		pop r17
+  57               	.LVL6:
+  58 0032 0F91      		pop r16
+  59               	.LVL7:
+  60 0034 0895      		ret
+  61               	.LFE2:
+  63               		.section	.text.LCDUpdate,"ax",@progbits
+  64               	.global	LCDUpdate
+  66               	LCDUpdate:
+  67               	.LFB3:
+  68               	.LSM8:
+  69 0000 1F93      		push r17
+  70 0002 CF93      		push r28
+  71 0004 DF93      		push r29
+  72               	/* prologue: function */
+  73               	/* frame size = 0 */
+  74               	.LSM9:
+  75 0006 8091 C800 		lds r24,200
+  76 000a 87FF      		sbrs r24,7
+  77 000c 00C0      		rjmp .L4
+  78               	.LSM10:
+  79 000e 1091 0000 		lds r17,lcdReady
+  80 0012 0E94 0000 		call uartRx
+  81 0016 182B      		or r17,r24
+  82 0018 1093 0000 		sts lcdReady,r17
+  83               	.L4:
+  84               	.LSM11:
+  85 001c 8091 0000 		lds r24,lcdReady
+  86 0020 8823      		tst r24
+  87 0022 01F0      		breq .L5
+  88 0024 20E0      		ldi r18,lo8(0)
+  89 0026 30E0      		ldi r19,hi8(0)
+  90               	.L8:
+  91               	.LSM12:
+  92 0028 E901      		movw r28,r18
+  93 002a C050      		subi r28,lo8(-(lcdtypes))
+  94 002c D040      		sbci r29,hi8(-(lcdtypes))
+  95 002e E881      		ld r30,Y
+  96 0030 F0E0      		ldi r31,lo8(0)
+  97 0032 E050      		subi r30,lo8(-(lcdupdate))
+  98 0034 F040      		sbci r31,hi8(-(lcdupdate))
+  99 0036 8081      		ld r24,Z
+ 100 0038 8823      		tst r24
+ 101 003a 01F0      		breq .L6
+ 102               	.LSM13:
+ 103 003c 6881      		ld r22,Y
+ 104 003e E881      		ld r30,Y
+ 105 0040 F0E0      		ldi r31,lo8(0)
+ 106 0042 EE0F      		lsl r30
+ 107 0044 FF1F      		rol r31
+ 108 0046 E050      		subi r30,lo8(-(data))
+ 109 0048 F040      		sbci r31,hi8(-(data))
+ 110 004a 4081      		ld r20,Z
+ 111 004c 5181      		ldd r21,Z+1
+ 112 004e 822F      		mov r24,r18
+ 113 0050 0E94 0000 		call LCDUpdateValue
+ 114               	.LSM14:
+ 115 0054 E881      		ld r30,Y
+ 116 0056 F0E0      		ldi r31,lo8(0)
+ 117 0058 E050      		subi r30,lo8(-(lcdupdate))
+ 118 005a F040      		sbci r31,hi8(-(lcdupdate))
+ 119 005c 1082      		st Z,__zero_reg__
+ 120               	.LSM15:
+ 121 005e 1092 0000 		sts lcdReady,__zero_reg__
+ 122 0062 00C0      		rjmp .L9
+ 123               	.L6:
+ 124               	.LSM16:
+ 125 0064 2F5F      		subi r18,lo8(-(1))
+ 126 0066 3F4F      		sbci r19,hi8(-(1))
+ 127               	.LSM17:
+ 128 0068 2730      		cpi r18,7
+ 129 006a 3105      		cpc r19,__zero_reg__
+ 130 006c 01F4      		brne .L8
+ 131 006e 00C0      		rjmp .L9
+ 132               	.L5:
+ 133               	.LSM18:
+ 134 0070 8FEF      		ldi r24,lo8(-1)
+ 135 0072 0E94 0000 		call uartTx
+ 136               	.LSM19:
+ 137 0076 8FEF      		ldi r24,lo8(-1)
+ 138 0078 0E94 0000 		call uartTx
+ 139               	.LSM20:
+ 140 007c 8FEF      		ldi r24,lo8(-1)
+ 141 007e 0E94 0000 		call uartTx
+ 142               	.L9:
+ 143               	/* epilogue start */
+ 144               	.LSM21:
+ 145 0082 DF91      		pop r29
+ 146 0084 CF91      		pop r28
+ 147 0086 1F91      		pop r17
+ 148 0088 0895      		ret
+ 149               	.LFE3:
+ 151               	.global	lcdReady
+ 152               	.global	lcdReady
+ 153               		.section .bss
+ 156               	lcdReady:
+ 157 0000 00        		.skip 1,0
+ 158               	.global	round
+ 159               	.global	round
+ 162               	round:
+ 163 0001 00        		.skip 1,0
+ 196               	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 uartlcd.c
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccQk210V.s:2      *ABS*:0000003f __SREG__
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccQk210V.s:3      *ABS*:0000003e __SP_H__
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccQk210V.s:4      *ABS*:0000003d __SP_L__
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccQk210V.s:5      *ABS*:00000034 __CCP__
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccQk210V.s:6      *ABS*:00000000 __tmp_reg__
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccQk210V.s:7      *ABS*:00000001 __zero_reg__
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccQk210V.s:19     .text.LCDUpdateValue:00000000 LCDUpdateValue
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccQk210V.s:66     .text.LCDUpdate:00000000 LCDUpdate
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccQk210V.s:156    .bss:00000000 lcdReady
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccQk210V.s:162    .bss:00000001 round
+
+UNDEFINED SYMBOLS
+uartTx
+uartRx
+lcdtypes
+lcdupdate
+data
+__do_clear_bss

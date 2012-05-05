@@ -3,19 +3,18 @@
 #include <util/delay.h>
 
 #include "spi.h"
+#include "uart.h"
 #include "mcp23s17.h"
 #include "mcp3204.h"
-#include "spilcd.h"
+#include "uartlcd.h"
 #include "timer.h"
 #include "Joystick.h"
 #include "AudioInput.h"
 #include "types.h"
 
-// USART
-#define BAUD 38400
-#include <util/setbaud.h>
-
 volatile uint16_t data[32] = {0x0000};
+volatile uint8_t lcdtypes[7] = {GEAR, RPM, SPEED, FUEL, LAP, LAPTIME, DELTA};
+volatile uint8_t lcdupdate[32] = {0};
 
 /** LUFA Audio Class driver interface configuration and state information. This structure is
  *  passed to all Audio Class driver functions, so that multiple instances of the same class
@@ -71,10 +70,14 @@ void EVENT_USB_Device_ConfigurationChanged(void)
 /** Event handler for the library USB Control Request reception event. */
 void EVENT_USB_Device_ControlRequest(void)
 {
+
 	if (USB_ControlRequest.bmRequestType == 64 && USB_ControlRequest.bRequest < sizeof(data)) {
-		//GPIOWrite(USB_ControlRequest.wValue, USB_ControlRequest.wValue >> 8);
-		data[USB_ControlRequest.bRequest] = USB_ControlRequest.wValue;
-		//LCDUpdateValue(2, SPEED, data[SPEED]);
+		
+		if(data[USB_ControlRequest.bRequest] != USB_ControlRequest.wValue) {
+			data[USB_ControlRequest.bRequest] = USB_ControlRequest.wValue;
+			lcdupdate[USB_ControlRequest.bRequest] = 1;
+		}
+		Endpoint_ClearStatusStage();
 	}
 	else {
 		HID_Device_ProcessControlRequest(&Joystick_HID_Interface);
@@ -267,11 +270,6 @@ void CALLBACK_HID_Device_ProcessHIDReport(USB_ClassInfo_HID_Device_t* const HIDI
 
 int main(void) {
 
-	
-	UBRR1H = UBRRH_VALUE;
-	UBRR1L = UBRRL_VALUE;
-	UCSR1B = (1<<RXEN1)|(1<<TXEN1);
-
 	// USB
 	/* Disable watchdog if enabled by bootloader/fuses */
 	MCUSR &= ~(1 << WDRF);
@@ -291,14 +289,13 @@ int main(void) {
 
 	// GPIO
 	GPIOInit();
-	GPIOWrite(0xff, 0xff);
 	
+	// UART
+	uartInit();
 	
 	// Timer
 	TimerInit(TIMER1);
-	TimerSetFreq(TIMER1, 1);
-	
-	//DDRD |= (1<<PD4);
+	TimerSetFreq(TIMER1, 70);
 
 	sei();
 	for (;;)
