@@ -55,7 +55,7 @@
   67               	.LSM9:
   68 0000 1092 CD00 		sts 205,__zero_reg__
   69               	.LSM10:
-  70 0004 89E1      		ldi r24,lo8(25)
+  70 0004 8CE0      		ldi r24,lo8(12)
   71 0006 8093 CC00 		sts 204,r24
   72               	.LSM11:
   73 000a 88E1      		ldi r24,lo8(24)
@@ -67,14 +67,14 @@
  120               	.Letext0:
 DEFINED SYMBOLS
                             *ABS*:00000000 uart.c
-C:\DOCUME~1\jase\LOCALS~1\Temp/cchGD8jC.s:2      *ABS*:0000003f __SREG__
-C:\DOCUME~1\jase\LOCALS~1\Temp/cchGD8jC.s:3      *ABS*:0000003e __SP_H__
-C:\DOCUME~1\jase\LOCALS~1\Temp/cchGD8jC.s:4      *ABS*:0000003d __SP_L__
-C:\DOCUME~1\jase\LOCALS~1\Temp/cchGD8jC.s:5      *ABS*:00000034 __CCP__
-C:\DOCUME~1\jase\LOCALS~1\Temp/cchGD8jC.s:6      *ABS*:00000000 __tmp_reg__
-C:\DOCUME~1\jase\LOCALS~1\Temp/cchGD8jC.s:7      *ABS*:00000001 __zero_reg__
-C:\DOCUME~1\jase\LOCALS~1\Temp/cchGD8jC.s:19     .text.uartTx:00000000 uartTx
-C:\DOCUME~1\jase\LOCALS~1\Temp/cchGD8jC.s:42     .text.uartRx:00000000 uartRx
-C:\DOCUME~1\jase\LOCALS~1\Temp/cchGD8jC.s:62     .text.uartInit:00000000 uartInit
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccwTczzO.s:2      *ABS*:0000003f __SREG__
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccwTczzO.s:3      *ABS*:0000003e __SP_H__
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccwTczzO.s:4      *ABS*:0000003d __SP_L__
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccwTczzO.s:5      *ABS*:00000034 __CCP__
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccwTczzO.s:6      *ABS*:00000000 __tmp_reg__
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccwTczzO.s:7      *ABS*:00000001 __zero_reg__
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccwTczzO.s:19     .text.uartTx:00000000 uartTx
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccwTczzO.s:42     .text.uartRx:00000000 uartRx
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccwTczzO.s:62     .text.uartInit:00000000 uartInit
 
 NO UNDEFINED SYMBOLS

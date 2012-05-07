@@ -14,7 +14,7 @@
 
 volatile uint16_t data[32] = {0x0000};
 volatile uint8_t lcdtypes[7] = {GEAR, RPM, SPEED, FUEL, LAP, LAPTIME, DELTA};
-volatile uint8_t lcdupdate[32] = {0};
+volatile uint8_t lcdupdate[32] = {1};
 
 /** LUFA Audio Class driver interface configuration and state information. This structure is
  *  passed to all Audio Class driver functions, so that multiple instances of the same class
@@ -71,7 +71,7 @@ void EVENT_USB_Device_ConfigurationChanged(void)
 void EVENT_USB_Device_ControlRequest(void)
 {
 
-	if (USB_ControlRequest.bmRequestType == 64 && USB_ControlRequest.bRequest < sizeof(data)) {
+	if (USB_ControlRequest.bmRequestType == 64 && USB_ControlRequest.bRequest < 32) {
 		
 		if(data[USB_ControlRequest.bRequest] != USB_ControlRequest.wValue) {
 			data[USB_ControlRequest.bRequest] = USB_ControlRequest.wValue;
@@ -293,9 +293,11 @@ int main(void) {
 	// UART
 	uartInit();
 	
+	/*
 	// Timer
 	TimerInit(TIMER1);
-	TimerSetFreq(TIMER1, 70);
+	TimerSetFreq(TIMER1, 100);
+	*/
 
 	sei();
 	for (;;)
@@ -303,5 +305,6 @@ int main(void) {
 		Audio_Device_USBTask(&Microphone_Audio_Interface);
 		HID_Device_USBTask(&Joystick_HID_Interface);
 		USB_USBTask();
+		LCDUpdate();
 	}
 }
