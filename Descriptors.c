@@ -65,7 +65,7 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM JoystickReport[] =
 	 *   Max physical X/Y Axis values (used to determine resolution):  1
 	 *   Buttons: 2
 	 */
-	HID_DESCRIPTOR_JOYSTICK(2, -100, 100, -1, 1, 2)
+	HID_DESCRIPTOR_JOYSTICK(0, -100, 100, -1, 1, 16)
 };
 
 /** Device descriptor structure. This descriptor, located in FLASH memory, describes the overall
@@ -86,7 +86,7 @@ const USB_Descriptor_Device_t PROGMEM DeviceDescriptor =
 
 	.VendorID               = 0x03EB,
 	.ProductID              = 0x2047,
-	.ReleaseNumber          = VERSION_BCD(00.02),
+	.ReleaseNumber          = VERSION_BCD(00.03),
 
 	.ManufacturerStrIndex   = 0x01,
 	.ProductStrIndex        = 0x02,
@@ -363,7 +363,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
 	const void* Address = NULL;
 	uint16_t    Size    = NO_DESCRIPTOR;
 
-switch (DescriptorType)
+	switch (DescriptorType)
 	{
 		case DTYPE_Device:
 			Address = &DeviceDescriptor;

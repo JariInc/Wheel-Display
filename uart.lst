@@ -67,14 +67,14 @@
  120               	.Letext0:
 DEFINED SYMBOLS
                             *ABS*:00000000 uart.c
-C:\DOCUME~1\jase\LOCALS~1\Temp/ccwTczzO.s:2      *ABS*:0000003f __SREG__
-C:\DOCUME~1\jase\LOCALS~1\Temp/ccwTczzO.s:3      *ABS*:0000003e __SP_H__
-C:\DOCUME~1\jase\LOCALS~1\Temp/ccwTczzO.s:4      *ABS*:0000003d __SP_L__
-C:\DOCUME~1\jase\LOCALS~1\Temp/ccwTczzO.s:5      *ABS*:00000034 __CCP__
-C:\DOCUME~1\jase\LOCALS~1\Temp/ccwTczzO.s:6      *ABS*:00000000 __tmp_reg__
-C:\DOCUME~1\jase\LOCALS~1\Temp/ccwTczzO.s:7      *ABS*:00000001 __zero_reg__
-C:\DOCUME~1\jase\LOCALS~1\Temp/ccwTczzO.s:19     .text.uartTx:00000000 uartTx
-C:\DOCUME~1\jase\LOCALS~1\Temp/ccwTczzO.s:42     .text.uartRx:00000000 uartRx
-C:\DOCUME~1\jase\LOCALS~1\Temp/ccwTczzO.s:62     .text.uartInit:00000000 uartInit
+C:\DOCUME~1\jase\LOCALS~1\Temp/cciBOkVZ.s:2      *ABS*:0000003f __SREG__
+C:\DOCUME~1\jase\LOCALS~1\Temp/cciBOkVZ.s:3      *ABS*:0000003e __SP_H__
+C:\DOCUME~1\jase\LOCALS~1\Temp/cciBOkVZ.s:4      *ABS*:0000003d __SP_L__
+C:\DOCUME~1\jase\LOCALS~1\Temp/cciBOkVZ.s:5      *ABS*:00000034 __CCP__
+C:\DOCUME~1\jase\LOCALS~1\Temp/cciBOkVZ.s:6      *ABS*:00000000 __tmp_reg__
+C:\DOCUME~1\jase\LOCALS~1\Temp/cciBOkVZ.s:7      *ABS*:00000001 __zero_reg__
+C:\DOCUME~1\jase\LOCALS~1\Temp/cciBOkVZ.s:19     .text.uartTx:00000000 uartTx
+C:\DOCUME~1\jase\LOCALS~1\Temp/cciBOkVZ.s:42     .text.uartRx:00000000 uartRx
+C:\DOCUME~1\jase\LOCALS~1\Temp/cciBOkVZ.s:62     .text.uartInit:00000000 uartInit
 
 NO UNDEFINED SYMBOLS

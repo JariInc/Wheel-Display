@@ -156,16 +156,16 @@
  203               	.Letext0:
 DEFINED SYMBOLS
                             *ABS*:00000000 uartlcd.c
-C:\DOCUME~1\jase\LOCALS~1\Temp/ccHNAp8b.s:2      *ABS*:0000003f __SREG__
-C:\DOCUME~1\jase\LOCALS~1\Temp/ccHNAp8b.s:3      *ABS*:0000003e __SP_H__
-C:\DOCUME~1\jase\LOCALS~1\Temp/ccHNAp8b.s:4      *ABS*:0000003d __SP_L__
-C:\DOCUME~1\jase\LOCALS~1\Temp/ccHNAp8b.s:5      *ABS*:00000034 __CCP__
-C:\DOCUME~1\jase\LOCALS~1\Temp/ccHNAp8b.s:6      *ABS*:00000000 __tmp_reg__
-C:\DOCUME~1\jase\LOCALS~1\Temp/ccHNAp8b.s:7      *ABS*:00000001 __zero_reg__
-C:\DOCUME~1\jase\LOCALS~1\Temp/ccHNAp8b.s:19     .text.LCDUpdateValue:00000000 LCDUpdateValue
-C:\DOCUME~1\jase\LOCALS~1\Temp/ccHNAp8b.s:66     .text.LCDUpdate:00000000 LCDUpdate
-C:\DOCUME~1\jase\LOCALS~1\Temp/ccHNAp8b.s:163    .bss:00000000 lcdReady
-C:\DOCUME~1\jase\LOCALS~1\Temp/ccHNAp8b.s:169    .bss:00000001 lcdItem
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccenhTfg.s:2      *ABS*:0000003f __SREG__
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccenhTfg.s:3      *ABS*:0000003e __SP_H__
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccenhTfg.s:4      *ABS*:0000003d __SP_L__
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccenhTfg.s:5      *ABS*:00000034 __CCP__
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccenhTfg.s:6      *ABS*:00000000 __tmp_reg__
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccenhTfg.s:7      *ABS*:00000001 __zero_reg__
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccenhTfg.s:19     .text.LCDUpdateValue:00000000 LCDUpdateValue
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccenhTfg.s:66     .text.LCDUpdate:00000000 LCDUpdate
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccenhTfg.s:163    .bss:00000000 lcdReady
+C:\DOCUME~1\jase\LOCALS~1\Temp/ccenhTfg.s:169    .bss:00000001 lcdItem
 
 UNDEFINED SYMBOLS
 uartTx

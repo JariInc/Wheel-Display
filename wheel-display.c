@@ -7,7 +7,6 @@
 #include "mcp23s17.h"
 #include "mcp3204.h"
 #include "uartlcd.h"
-#include "timer.h"
 #include "Joystick.h"
 #include "AudioInput.h"
 #include "types.h"
@@ -71,7 +70,7 @@ void EVENT_USB_Device_ConfigurationChanged(void)
 void EVENT_USB_Device_ControlRequest(void)
 {
 
-	if (USB_ControlRequest.bmRequestType == 64 && USB_ControlRequest.bRequest < 32) {
+	if (USB_ControlRequest.bmRequestType == 64 && USB_ControlRequest.bRequest < sizeof(data)) {
 		
 		if(data[USB_ControlRequest.bRequest] != USB_ControlRequest.wValue) {
 			data[USB_ControlRequest.bRequest] = USB_ControlRequest.wValue;
@@ -108,11 +107,12 @@ bool CALLBACK_HID_Device_CreateHIDReport(USB_ClassInfo_HID_Device_t* const HIDIn
                                          uint16_t* const ReportSize)
 {
 	USB_JoystickReport_Data_t* JoystickReport = (USB_JoystickReport_Data_t*)ReportData;
+	
+	char buttons = GPIORead(0);
 
-	JoystickReport->X = 0;
-	JoystickReport->Y = 0;
-	JoystickReport->Button = 0b10;
-
+	GPIOWrite(0x00, buttons);
+	JoystickReport->Buttons1 = buttons;
+	JoystickReport->Buttons2 = buttons ^ 0xff;
 	*ReportSize = sizeof(USB_JoystickReport_Data_t);
 	return false;
 }
@@ -268,6 +268,15 @@ void CALLBACK_HID_Device_ProcessHIDReport(USB_ClassInfo_HID_Device_t* const HIDI
 {
 }
 
+volatile uint8_t d = 0;
+
+void ShiftLedsUpdate(void) {
+	if(lcdupdate[SHIFTLEDS]) {
+		GPIOWrite(0x00, data[SHIFTLEDS] & 0x7f);
+		lcdupdate[SHIFTLEDS] = 0;
+	}
+}
+
 int main(void) {
 
 	// USB
@@ -292,12 +301,6 @@ int main(void) {
 	
 	// UART
 	uartInit();
-	
-	/*
-	// Timer
-	TimerInit(TIMER1);
-	TimerSetFreq(TIMER1, 100);
-	*/
 
 	sei();
 	for (;;)
@@ -306,5 +309,6 @@ int main(void) {
 		HID_Device_USBTask(&Joystick_HID_Interface);
 		USB_USBTask();
 		LCDUpdate();
+		ShiftLedsUpdate();
 	}
 }

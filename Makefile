@@ -138,7 +138,6 @@ SRC = $(TARGET).c                                                 \
 		mcp3204.c \
 		mcp23s17.c \
 		spi.c \
-		timer.c \
 		uart.c\
 		uartlcd.c
 

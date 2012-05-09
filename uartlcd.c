@@ -20,8 +20,6 @@ void LCDUpdateValue(uint8_t pos, uint8_t type, uint16_t value) {
 }
 
 void LCDUpdate(void) {
-	uint8_t i;
-
 	if((UCSR1A & (1<<RXC1)))
 		lcdReady |= uartRx();
 
