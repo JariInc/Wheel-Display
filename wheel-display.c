@@ -3,17 +3,17 @@
 #include <util/delay.h>
 
 #include "spi.h"
-#include "uart.h"
 #include "mcp23s17.h"
 #include "mcp3204.h"
-//#include "uartlcd.h"
+#include "lcd.h"
 #include "Joystick.h"
 #include "AudioInput.h"
-#include "types.h"
+#include "message.h"
 
 volatile uint16_t data[32] = {0x0000};
-volatile uint8_t lcdtypes[7] = {GEAR, RPM, SPEED, FUEL, LAP, LAPTIME, DELTA};
-volatile uint8_t lcdupdate[32] = {1};
+volatile uint8_t updatePending = 1;
+volatile uint8_t lcdtypes[7] = {TYPE_GEAR, TYPE_RPM, TYPE_SPEED, TYPE_FUEL, TYPE_LAP, TYPE_LAPTIME, TYPE_DELTA};
+//volatile uint8_t lcdupdate[32] = {1};
 
 /** LUFA Audio Class driver interface configuration and state information. This structure is
  *  passed to all Audio Class driver functions, so that multiple instances of the same class
@@ -32,6 +32,10 @@ USB_ClassInfo_Audio_Device_t Microphone_Audio_Interface =
 
 /** Current audio sampling frequency of the streaming audio endpoint. */
 static uint32_t CurrentAudioSampleFrequency = 8000;
+
+/** Audio channel noise floor */
+volatile uint16_t noisefloor[2];
+
 
 /** Buffer to hold the previously generated HID report, for comparison purposes inside the HID class driver. */
 static uint8_t PrevJoystickHIDReportBuffer[sizeof(USB_JoystickReport_Data_t)];
@@ -61,8 +65,8 @@ void EVENT_USB_Device_ConfigurationChanged(void)
 {
 	bool ConfigSuccess = true;
 
-	ConfigSuccess &= Audio_Device_ConfigureEndpoints(&Microphone_Audio_Interface);
 	ConfigSuccess &= HID_Device_ConfigureEndpoints(&Joystick_HID_Interface);
+	ConfigSuccess &= Audio_Device_ConfigureEndpoints(&Microphone_Audio_Interface);	
 
 	USB_Device_EnableSOFEvents();
 }
@@ -70,19 +74,19 @@ void EVENT_USB_Device_ConfigurationChanged(void)
 /** Event handler for the library USB Control Request reception event. */
 void EVENT_USB_Device_ControlRequest(void)
 {
-
 	if (USB_ControlRequest.bmRequestType == 64 && USB_ControlRequest.bRequest < sizeof(data)) {
-		
 		if(data[USB_ControlRequest.bRequest] != USB_ControlRequest.wValue) {
 			data[USB_ControlRequest.bRequest] = USB_ControlRequest.wValue;
-			lcdupdate[USB_ControlRequest.bRequest] = 1;
+			updatePending = 1;
 		}
+		
 		Endpoint_ClearStatusStage();
 	}
+	else {
 	
-	Audio_Device_ProcessControlRequest(&Microphone_Audio_Interface);
-	HID_Device_ProcessControlRequest(&Joystick_HID_Interface);
-	
+		HID_Device_ProcessControlRequest(&Joystick_HID_Interface);
+		Audio_Device_ProcessControlRequest(&Microphone_Audio_Interface);
+	}
 }
 
 /** Event handler for the USB device Start Of Frame event. */
@@ -117,7 +121,8 @@ bool CALLBACK_HID_Device_CreateHIDReport(USB_ClassInfo_HID_Device_t* const HIDIn
 
 	for(row = 0; row < 4; row++) {
 		GPIOWrite(0, (1 << row) ^ 0x0f);
-		JoystickReport->Button |= ((GPIORead(0) >> 4) << (row << 2))
+		JoystickReport->Button |= ((GPIORead(0) >> 4) << (row << 2));
+	}
 	*ReportSize = sizeof(USB_JoystickReport_Data_t);
 	return false;
 }
@@ -130,7 +135,8 @@ ISR(TIMER0_COMPA_vect, ISR_BLOCK)
 	/* Check that the USB bus is ready for the next sample to write */
 	if (Audio_Device_IsReadyForNextSample(&Microphone_Audio_Interface))
 	{
-		Audio_Device_WriteSample16(&Microphone_Audio_Interface, (ADCGetValue(0) + 6400) << 3);
+		//Audio_Device_WriteSample16(&Microphone_Audio_Interface, ADCGetValue(0));
+		Audio_Device_WriteSample16(&Microphone_Audio_Interface, (ADCGetValue(0) - noisefloor[0]));
 		//Audio_Device_WriteSample8(&Microphone_Audio_Interface, (ADCGetValue(0) + 6400) >> 5);
 		//uint16_t sample = ADCGetValue(1) >> 4;
 		//Audio_Device_WriteSample16(&Microphone_Audio_Interface, ((ADCGetValue(0) >> 4) & 0xff) | (sample << 8));
@@ -276,10 +282,7 @@ void CALLBACK_HID_Device_ProcessHIDReport(USB_ClassInfo_HID_Device_t* const HIDI
 volatile uint8_t d = 0;
 
 void ShiftLedsUpdate(void) {
-	if(lcdupdate[SHIFTLEDS]) {
-		GPIOWrite(1, data[SHIFTLEDS] & 0x7f);
-		lcdupdate[SHIFTLEDS] = 0;
-	}
+	GPIOWrite(1, data[TYPE_SHIFTLEDS] & 0x7f);
 }
 
 int main(void) {
@@ -303,18 +306,48 @@ int main(void) {
 
 	// GPIO
 	GPIOInit();
-	
-	// UART
-	uartInit();
-	uartTx(0xff);
 
+	// LCD
+	LCDinit();
+
+
+	// Timer 1
+	DDRB |= 1 << PB7;
+	//PORTB |= 1 << PB7;
+	
+    // set up timer with prescaler and CTC mode
+	TCCR1A |= (1 << WGM11)|(1 << WGM10)|(1 << COM1C1)|(1 << COM1C0);
+    TCCR1B |= (1 << WGM12)|(0 << WGM13)|(0 << CS12)|(1 << CS11)|(0 << CS10); // prescaling 64
+	data[TYPE_BACKLIGHT] = 32;
+    // initialize counter
+    //TCNT1 = 0;
+    // initialize compare value
+    OCR1C = data[TYPE_BACKLIGHT];
+    // enable compare interrupt
+    //TIMSK |= (1 << OCIE1A);
+	
 	sei();
 	for (;;)
 	{
 		Audio_Device_USBTask(&Microphone_Audio_Interface);
 		HID_Device_USBTask(&Joystick_HID_Interface);
 		USB_USBTask();
-//		LCDUpdate();
-		ShiftLedsUpdate();
+		if(updatePending) {
+			uint8_t i;
+			for(i=0; i < sizeof(lcdtypes); i++)
+				LCDProcessMessage(i << 1, lcdtypes[i], data[lcdtypes[i]]);
+			LCDupdate();
+			ShiftLedsUpdate();
+			OCR1C = data[TYPE_BACKLIGHT];
+			updatePending = 0;
+		}
 	}
 }
+/*
+// Timer 1
+ISR(TIMER1_COMPA_vect) {
+	// LCD content update
+    LCDupdate();
+	ShiftLedsUpdate();
+}
+*/

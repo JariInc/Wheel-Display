@@ -3,17 +3,6 @@
 #include "mcp23s17.h"
 #include "spi.h"
 
-/*
-void GPIOWrite(unsigned char a, unsigned char b) {
-	SPI_SelectSlave(SPIGPIO);
-	SPI_MasterTransmit(0x40);	// chip select, write
-	SPI_MasterTransmit(0x12);	// addr
-	SPI_MasterTransmit(a);		// GPIOA
-	SPI_MasterTransmit(b); 		// GPIOB
-	SPI_UnselectAllSlaves();
-}
-*/
-
 void GPIOWrite(uint8_t bank, unsigned char data) { // 0=bank a, 1=bank b
 	SPI_SelectSlave(SPIGPIO);
 	SPI_MasterTransmit(0x40);					// chip select, write

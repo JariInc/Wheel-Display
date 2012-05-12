@@ -17,7 +17,6 @@ void SPI_MasterInit(void) {
     dump = SPDR;
 
 	/* Set all slave selects output and high */
-	SPILCD_DDR |= (1<<SPILCD_PIN);
 	SPIGPIO_DDR |= (1<<SPIGPIO_PIN);
 	SPIADC_DDR |= (1<<SPIADC_PIN);
 	SPI_UnselectAllSlaves();
@@ -33,20 +32,15 @@ char SPI_MasterTransmit(char cData){
 
 
 void SPI_UnselectAllSlaves(void) {
-	SPILCD_PORT |= (1<<SPILCD_PIN);
 	SPIGPIO_PORT |= (1<<SPIGPIO_PIN);
 	SPIADC_PORT |= (1<<SPIADC_PIN);
 }
 
 void SPI_SelectSlave(uint8_t slave) {
 	// clear all
-	// we trust our own code
-	//SPI_UnselectAllSlaves();
+	SPI_UnselectAllSlaves();
 	// set one
 	switch(slave) {
-		case SPILCD:
-			SPILCD_PORT &= ~(1<<SPILCD_PIN);
-			break;
 		case SPIGPIO:
 			SPIGPIO_PORT &= ~(1<<SPIGPIO_PIN);
 			break;
