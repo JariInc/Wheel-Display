@@ -1,6 +1,7 @@
 #include <avr/io.h>
 
-#define BAUD 76800
+#define BAUD 38400
+//76800
 #include <util/setbaud.h>
 
 void uartTx(char data) {

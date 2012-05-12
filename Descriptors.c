@@ -63,7 +63,7 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM JoystickReport[] =
 	 *   Max X/Y Axis values:  100
 	 *   Min physical X/Y Axis values (used to determine resolution): -1
 	 *   Max physical X/Y Axis values (used to determine resolution):  1
-	 *   Buttons: 2
+	 *   Buttons: 16
 	 */
 	HID_DESCRIPTOR_JOYSTICK(0, -100, 100, -1, 1, 16)
 };
@@ -86,7 +86,7 @@ const USB_Descriptor_Device_t PROGMEM DeviceDescriptor =
 
 	.VendorID               = 0x03EB,
 	.ProductID              = 0x2047,
-	.ReleaseNumber          = VERSION_BCD(00.03),
+	.ReleaseNumber          = VERSION_BCD(00.04),
 
 	.ManufacturerStrIndex   = 0x01,
 	.ProductStrIndex        = 0x02,

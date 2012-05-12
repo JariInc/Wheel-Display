@@ -56,14 +56,11 @@
 		{
 			//int8_t  X; /**< Current absolute joystick X position, as a signed 8-bit integer */
 			//int8_t  Y; /**< Current absolute joystick Y position, as a signed 8-bit integer */
-			uint8_t Buttons1; /**< Bit mask of the currently pressed joystick buttons */
-			uint8_t Buttons2;
+			uint16_t Button; /**< Bit mask of the currently pressed joystick buttons */
+			uint8_t fix;
 		} USB_JoystickReport_Data_t;
 
-	/* Macros: */
-
 	/* Function Prototypes: */
-		void SetupJoystick(void);
 		void EVENT_USB_Device_Connect(void);
 		void EVENT_USB_Device_Disconnect(void);
 		void EVENT_USB_Device_ConfigurationChanged(void);
@@ -82,3 +79,4 @@
 		                                          const uint16_t ReportSize);
 
 #endif
+

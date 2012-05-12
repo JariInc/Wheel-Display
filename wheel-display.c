@@ -6,7 +6,7 @@
 #include "uart.h"
 #include "mcp23s17.h"
 #include "mcp3204.h"
-#include "uartlcd.h"
+//#include "uartlcd.h"
 #include "Joystick.h"
 #include "AudioInput.h"
 #include "types.h"
@@ -55,13 +55,14 @@ USB_ClassInfo_HID_Device_t Joystick_HID_Interface =
 			},
 	};
 
+
 /** Event handler for the library USB Configuration Changed event. */
 void EVENT_USB_Device_ConfigurationChanged(void)
 {
 	bool ConfigSuccess = true;
 
-	ConfigSuccess &= HID_Device_ConfigureEndpoints(&Joystick_HID_Interface);
 	ConfigSuccess &= Audio_Device_ConfigureEndpoints(&Microphone_Audio_Interface);
+	ConfigSuccess &= HID_Device_ConfigureEndpoints(&Joystick_HID_Interface);
 
 	USB_Device_EnableSOFEvents();
 }
@@ -78,10 +79,10 @@ void EVENT_USB_Device_ControlRequest(void)
 		}
 		Endpoint_ClearStatusStage();
 	}
-	else {
-		HID_Device_ProcessControlRequest(&Joystick_HID_Interface);
-		Audio_Device_ProcessControlRequest(&Microphone_Audio_Interface);
-	}
+	
+	Audio_Device_ProcessControlRequest(&Microphone_Audio_Interface);
+	HID_Device_ProcessControlRequest(&Joystick_HID_Interface);
+	
 }
 
 /** Event handler for the USB device Start Of Frame event. */
@@ -100,6 +101,8 @@ void EVENT_USB_Device_StartOfFrame(void)
  *
  *  \return Boolean true to force the sending of the report, false to let the library determine if it needs to be sent
  */
+volatile uint8_t btn = 0;
+
 bool CALLBACK_HID_Device_CreateHIDReport(USB_ClassInfo_HID_Device_t* const HIDInterfaceInfo,
                                          uint8_t* const ReportID,
                                          const uint8_t ReportType,
@@ -107,12 +110,14 @@ bool CALLBACK_HID_Device_CreateHIDReport(USB_ClassInfo_HID_Device_t* const HIDIn
                                          uint16_t* const ReportSize)
 {
 	USB_JoystickReport_Data_t* JoystickReport = (USB_JoystickReport_Data_t*)ReportData;
-	
-	char buttons = GPIORead(0);
 
-	GPIOWrite(0x00, buttons);
-	JoystickReport->Buttons1 = buttons;
-	JoystickReport->Buttons2 = buttons ^ 0xff;
+	uint8_t row;
+	
+	JoystickReport->Button = 0x0000;
+
+	for(row = 0; row < 4; row++) {
+		GPIOWrite(0, (1 << row) ^ 0x0f);
+		JoystickReport->Button |= ((GPIORead(0) >> 4) << (row << 2))
 	*ReportSize = sizeof(USB_JoystickReport_Data_t);
 	return false;
 }
@@ -272,7 +277,7 @@ volatile uint8_t d = 0;
 
 void ShiftLedsUpdate(void) {
 	if(lcdupdate[SHIFTLEDS]) {
-		GPIOWrite(0x00, data[SHIFTLEDS] & 0x7f);
+		GPIOWrite(1, data[SHIFTLEDS] & 0x7f);
 		lcdupdate[SHIFTLEDS] = 0;
 	}
 }
@@ -301,6 +306,7 @@ int main(void) {
 	
 	// UART
 	uartInit();
+	uartTx(0xff);
 
 	sei();
 	for (;;)
@@ -308,7 +314,7 @@ int main(void) {
 		Audio_Device_USBTask(&Microphone_Audio_Interface);
 		HID_Device_USBTask(&Joystick_HID_Interface);
 		USB_USBTask();
-		LCDUpdate();
+//		LCDUpdate();
 		ShiftLedsUpdate();
 	}
 }
