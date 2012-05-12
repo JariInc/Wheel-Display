@@ -10,16 +10,17 @@
 #include "headers.h"
 
 volatile LCDtext labels[14];
-volatile uint8_t resetCnt = 0;
-volatile uint8_t buffer[32] = {0x00};
-volatile uint8_t bufferPtr = 0;
 
 extern volatile uint16_t data[32];
 extern volatile uint8_t lcdtypes[7];
 
 void LCDupdate(void) {
 	uint8_t i;
-	for(i = 0; i < sizeof(labels)/sizeof(LCDtext); i++) {
+
+	if(GET_REDRAW(labels[0]))
+		LCD_writegear(labels[0].number);
+
+	for(i = 2; i < sizeof(labels)/sizeof(LCDtext); i++) {
 		if(GET_REDRAW(labels[i])) {
 			LCD_writestring(&labels[i]);
 		}
@@ -29,17 +30,16 @@ void LCDupdate(void) {
 void LCDProcessMessage(uint8_t pos, uint8_t type, uint16_t value) {
 
 	// gear is special case
-	if(pos == POS_GEAR && value < 9) {
-		if(labels[POS_GEAR].number != value) {
+	if(pos == POS_GEAR) {
+		if(labels[POS_GEAR].number != value && value < 9) {
 			labels[POS_GEAR].number = value;
 			SET_TYPE(labels[POS_GEAR], TYPE_NULL);
 			SET_REDRAW(labels[POS_GEAR]);
 		}
 	}
-	else if(pos >= 2) {
+	else {
 		// type change
-		if(GET_TYPE(labels[pos]) != type) {
-			SET_TYPE(labels[pos], type);
+		if(GET_TYPE(labels[pos]) != type || type == TYPE_RPM) {
 			// header
 			uint8_t i = 0;
 			uint8_t index = type & 0b1111;
@@ -58,6 +58,7 @@ void LCDProcessMessage(uint8_t pos, uint8_t type, uint16_t value) {
 			}
 
 			labels[pos].len = i;
+			SET_TYPE(labels[pos], type);
 			SET_REDRAW(labels[pos]);
 		}
 
@@ -69,7 +70,6 @@ void LCDProcessMessage(uint8_t pos, uint8_t type, uint16_t value) {
 				uint8_t seconds = (value >> 3) & 0b111111;
 				uint8_t minutes = (value >> 9) & 0b11111;
 				uint8_t sign = value >> 15;
-				uint8_t len = 0;
 				char ret[STRING_MAX_LEN];
 				char* retPtr = &ret;
 
@@ -108,7 +108,9 @@ void LCDProcessMessage(uint8_t pos, uint8_t type, uint16_t value) {
 			else {
 				labels[pos+1].number = value;
 			}
+
 			SET_REDRAW(labels[pos+1]);
+			SET_TYPE(labels[pos+1], type);
 		}
 	}
 }
@@ -240,14 +242,14 @@ void LCD_writestring(LCDtext *t) {
 	uint8_t x = t->x;
 
 	if(t->len < 1) {
-		utoa(t->number, t->text, 0x0a);
-		if(t->number < 10)
+		itoa(t->number, t->text, 10);
+		if(t->number < 10 && t->number > -10)
 			t->len = 1;
-		else if(t->number < 100)
+		else if(t->number < 100 && t->number > -100)
 			t->len = 2;
-		else if(t->number < 1000)
+		else if(t->number < 1000 && t->number > -1000)
 			t->len = 3;
-		else if(t->number < 1000)
+		else if(t->number < 10000 && t->number > -10000)
 			t->len = 4;
 		else
 			t->len = 5;
@@ -260,6 +262,8 @@ void LCD_writestring(LCDtext *t) {
 			case FONT_LARGE:
 				if(t->text[i] > 0x2f && t->text[i] < 0x3a)
 					x = LCD_writechar_16(x, t->y, (t->text[i] - 0x30));
+				else if(t->text[i] == 0x2d)
+					x = LCD_writechar_16(x, t->y, 0x0a);
 				break;
 			case FONT_SMALL:
 				if((t->text[i] > 0x60) && (t->text[i] < 0x7b)) // a-z
@@ -277,7 +281,7 @@ void LCD_writestring(LCDtext *t) {
 				break;
 			case FONT_HUGE:
 				if(t->text[i] > 0x2f && t->text[i] < 0x3a)
-					/*x = */LCD_writegear(t->number);
+					LCD_writegear(t->number);
 				break;
 		}
 		 // space between chars

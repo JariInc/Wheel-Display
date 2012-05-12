@@ -2,14 +2,14 @@ char headersInt[8][STRING_MAX_LEN] PROGMEM = {
 	"", // null type
 	"speed",
 	"fuel",
-	"fuelneed",
+	"fuel need",
 	"lap",
 	"to go",
-	"pos",
+	"position",
 	"rpm",
 };
 
 char headersTime[2][STRING_MAX_LEN] PROGMEM = {
-	"time",
+	"laptime",
 	"delta",
 };

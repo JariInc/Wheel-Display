@@ -28,7 +28,7 @@ typedef struct {
 	uint8_t font;
 	uint16_t number;
 	char text[STRING_MAX_LEN];
-	uint8_t meta; // 0bRRrttttt, R=reserved
+	uint8_t meta; // 0bRRdttttt, R=reserved
 } LCDtext;
 
 uint8_t LCD_writechar_8(uint8_t x, uint8_t page, uint8_t character);

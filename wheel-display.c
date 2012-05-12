@@ -12,7 +12,12 @@
 
 volatile uint16_t data[32] = {0x0000};
 volatile uint8_t updatePending = 1;
-volatile uint8_t lcdtypes[7] = {TYPE_GEAR, TYPE_RPM, TYPE_SPEED, TYPE_FUEL, TYPE_LAP, TYPE_LAPTIME, TYPE_DELTA};
+volatile uint8_t lcdtypes[7] = {TYPE_GEAR, TYPE_RPM, TYPE_SPEED, TYPE_POS, TYPE_LAP, TYPE_LAPTIME, TYPE_DELTA};
+volatile uint16_t prevButtonMask = 0;
+volatile uint16_t buttonChange = 0;
+
+extern volatile LCDtext labels[14];
+
 //volatile uint8_t lcdupdate[32] = {1};
 
 /** LUFA Audio Class driver interface configuration and state information. This structure is
@@ -123,6 +128,11 @@ bool CALLBACK_HID_Device_CreateHIDReport(USB_ClassInfo_HID_Device_t* const HIDIn
 		GPIOWrite(0, (1 << row) ^ 0x0f);
 		JoystickReport->Button |= ((GPIORead(0) >> 4) << (row << 2));
 	}
+
+	// save rising edge
+	buttonChange = (prevButtonMask ^ JoystickReport->Button) & JoystickReport->Button;
+	prevButtonMask = JoystickReport->Button;
+
 	*ReportSize = sizeof(USB_JoystickReport_Data_t);
 	return false;
 }
@@ -315,16 +325,11 @@ int main(void) {
 	DDRB |= 1 << PB7;
 	//PORTB |= 1 << PB7;
 	
-    // set up timer with prescaler and CTC mode
+    // PWM for backlight
 	TCCR1A |= (1 << WGM11)|(1 << WGM10)|(1 << COM1C1)|(1 << COM1C0);
     TCCR1B |= (1 << WGM12)|(0 << WGM13)|(0 << CS12)|(1 << CS11)|(0 << CS10); // prescaling 64
 	data[TYPE_BACKLIGHT] = 32;
-    // initialize counter
-    //TCNT1 = 0;
-    // initialize compare value
     OCR1C = data[TYPE_BACKLIGHT];
-    // enable compare interrupt
-    //TIMSK |= (1 << OCIE1A);
 	
 	sei();
 	for (;;)
@@ -332,10 +337,42 @@ int main(void) {
 		Audio_Device_USBTask(&Microphone_Audio_Interface);
 		HID_Device_USBTask(&Joystick_HID_Interface);
 		USB_USBTask();
+
+		if(buttonChange) {
+			// catch button presses for internal functions
+
+			// first button rotates top row
+			if(buttonChange & (1 << 0)) {
+				switch(lcdtypes[2]) {
+					case TYPE_SPEED:
+						lcdtypes[1] = TYPE_POS;
+						lcdtypes[2] = TYPE_RPM;
+						break;
+					case TYPE_RPM:
+						lcdtypes[1] = TYPE_SPEED;
+						lcdtypes[2] = TYPE_POS;
+						break;
+					default:
+						lcdtypes[1] = TYPE_RPM;
+						lcdtypes[2] = TYPE_SPEED;
+				}
+			}
+			// second button rotates second row
+
+
+			// refresh everything
+			uint8_t i;
+			for(i = 0; i < sizeof(labels)/sizeof(LCDtext); i++)
+				SET_REDRAW(labels[i]);
+
+			updatePending = 1;
+		}
+
 		if(updatePending) {
 			uint8_t i;
 			for(i=0; i < sizeof(lcdtypes); i++)
 				LCDProcessMessage(i << 1, lcdtypes[i], data[lcdtypes[i]]);
+
 			LCDupdate();
 			ShiftLedsUpdate();
 			OCR1C = data[TYPE_BACKLIGHT];
@@ -343,11 +380,3 @@ int main(void) {
 		}
 	}
 }
-/*
-// Timer 1
-ISR(TIMER1_COMPA_vect) {
-	// LCD content update
-    LCDupdate();
-	ShiftLedsUpdate();
-}
-*/
