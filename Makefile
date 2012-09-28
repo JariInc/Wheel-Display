@@ -139,7 +139,8 @@ SRC = $(TARGET).c                                                 \
 		mcp23s17.c \
 		spi.c \
 		ks0108.c \
-		lcd.c
+		lcd.c \
+		nlms.c
 
 #		uartlcd.c \
 #		AudioInput.c \

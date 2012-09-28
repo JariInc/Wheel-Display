@@ -9,12 +9,14 @@
 #include "Joystick.h"
 #include "AudioInput.h"
 #include "message.h"
+#include "nlms.h"
 
 volatile uint16_t data[32] = {0x0000};
 volatile uint8_t updatePending = 1;
 volatile uint8_t lcdtypes[7] = {TYPE_GEAR, TYPE_RPM, TYPE_SPEED, TYPE_POS, TYPE_LAP, TYPE_LAPTIME, TYPE_DELTA};
 volatile uint16_t prevButtonMask = 0;
 volatile uint16_t buttonChange = 0;
+volatile int16_t audioSample;
 
 extern volatile LCDtext labels[14];
 
@@ -146,10 +148,15 @@ ISR(TIMER0_COMPA_vect, ISR_BLOCK)
 	if (Audio_Device_IsReadyForNextSample(&Microphone_Audio_Interface))
 	{
 		//Audio_Device_WriteSample16(&Microphone_Audio_Interface, ADCGetValue(0));
-		Audio_Device_WriteSample16(&Microphone_Audio_Interface, (ADCGetValue(0) - noisefloor[0]));
+		//Audio_Device_WriteSample16(&Microphone_Audio_Interface, (ADCGetValue(0) - noisefloor[0]));
 		//Audio_Device_WriteSample8(&Microphone_Audio_Interface, (ADCGetValue(0) + 6400) >> 5);
 		//uint16_t sample = ADCGetValue(1) >> 4;
 		//Audio_Device_WriteSample16(&Microphone_Audio_Interface, ((ADCGetValue(0) >> 4) & 0xff) | (sample << 8));
+
+		// one sample delay
+		Audio_Device_WriteSample16(&Microphone_Audio_Interface, audioSample);
+		audioSample = NLMS((ADCGetValue(0) - noisefloor[0]), (ADCGetValue(1) - noisefloor[1]));
+
 	}
 
 	Endpoint_SelectEndpoint(PrevEndpoint);
@@ -320,6 +327,8 @@ int main(void) {
 	// LCD
 	LCDinit();
 
+	// NLMS
+	NLMSinit();
 
 	// Timer 1
 	DDRB |= 1 << PB7;
@@ -328,7 +337,7 @@ int main(void) {
     // PWM for backlight
 	TCCR1A |= (1 << WGM11)|(1 << WGM10)|(1 << COM1C1)|(1 << COM1C0);
     TCCR1B |= (1 << WGM12)|(0 << WGM13)|(0 << CS12)|(1 << CS11)|(0 << CS10); // prescaling 64
-	data[TYPE_BACKLIGHT] = 32;
+	data[TYPE_BACKLIGHT] = 1023;
     OCR1C = data[TYPE_BACKLIGHT];
 	
 	sei();
