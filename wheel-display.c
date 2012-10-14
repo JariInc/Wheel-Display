@@ -1,3 +1,4 @@
+#include <limits.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
@@ -41,7 +42,7 @@ USB_ClassInfo_Audio_Device_t Microphone_Audio_Interface =
 static uint32_t CurrentAudioSampleFrequency = 8000;
 
 /** Audio channel noise floor */
-volatile uint16_t noisefloor[2];
+volatile int16_t noisefloor[2];
 
 
 /** Buffer to hold the previously generated HID report, for comparison purposes inside the HID class driver. */
@@ -147,16 +148,10 @@ ISR(TIMER0_COMPA_vect, ISR_BLOCK)
 	/* Check that the USB bus is ready for the next sample to write */
 	if (Audio_Device_IsReadyForNextSample(&Microphone_Audio_Interface))
 	{
-		//Audio_Device_WriteSample16(&Microphone_Audio_Interface, ADCGetValue(0));
-		//Audio_Device_WriteSample16(&Microphone_Audio_Interface, (ADCGetValue(0) - noisefloor[0]));
-		//Audio_Device_WriteSample8(&Microphone_Audio_Interface, (ADCGetValue(0) + 6400) >> 5);
-		//uint16_t sample = ADCGetValue(1) >> 4;
-		//Audio_Device_WriteSample16(&Microphone_Audio_Interface, ((ADCGetValue(0) >> 4) & 0xff) | (sample << 8));
-
-		// one sample delay
 		Audio_Device_WriteSample16(&Microphone_Audio_Interface, audioSample);
-		audioSample = NLMS((ADCGetValue(0) - noisefloor[0]), (ADCGetValue(1) - noisefloor[1]));
-
+		//audioSample = 0;
+		//audioSample = nlms((ADCGetValue(0) - noisefloor[0]), (ADCGetValue(1) - noisefloor[1])) << 4;
+		//audioSample = ((int16_t)ADCGetValue(0) - noisefloor[0]) << 4;
 	}
 
 	Endpoint_SelectEndpoint(PrevEndpoint);
@@ -327,9 +322,6 @@ int main(void) {
 	// LCD
 	LCDinit();
 
-	// NLMS
-	NLMSinit();
-
 	// Timer 1
 	DDRB |= 1 << PB7;
 	//PORTB |= 1 << PB7;
@@ -387,5 +379,7 @@ int main(void) {
 			OCR1C = data[TYPE_BACKLIGHT];
 			updatePending = 0;
 		}
+
+		audioSample = nlms((ADCGetValue(0) - noisefloor[0]), (ADCGetValue(1) - noisefloor[1]));
 	}
 }

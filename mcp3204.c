@@ -2,7 +2,7 @@
 #include "spi.h"
 #include "mcp3204.h"
 
-extern volatile uint16_t noisefloor[2];
+extern volatile int16_t noisefloor[2];
 
 void ADCinit(void) {
 	// just in case, push CS low for a while
