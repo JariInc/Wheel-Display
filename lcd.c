@@ -17,12 +17,15 @@ extern volatile uint8_t lcdtypes[7];
 void LCDupdate(void) {
 	uint8_t i;
 
-	if(GET_REDRAW(labels[0]))
+	if(GET_REDRAW(labels[0])) {
 		LCD_writegear(labels[0].number);
+		RESET_REDRAW(labels[0]);
+	}
 
 	for(i = 2; i < sizeof(labels)/sizeof(LCDtext); i++) {
 		if(GET_REDRAW(labels[i])) {
 			LCD_writestring(&labels[i]);
+			RESET_REDRAW(labels[i]);
 		}
 	}
 }
@@ -66,9 +69,9 @@ void LCDProcessMessage(uint8_t pos, uint8_t type, uint16_t value) {
 		if(labels[pos].number != value) {
 			// Special formatting (5th byte on type is set)
 			if(type & 0b10000) {
-				uint8_t tenth = value & 0b111;
-				uint8_t seconds = (value >> 3) & 0b111111;
-				uint8_t minutes = (value >> 9) & 0b11111;
+				uint8_t tenth = value & 0b1111;
+				uint8_t seconds = (value >> 4) & 0b111111;
+				uint8_t minutes = (value >> 10) & 0b11111;
 				uint8_t sign = value >> 15;
 				char ret[STRING_MAX_LEN];
 				char* retPtr = &ret;

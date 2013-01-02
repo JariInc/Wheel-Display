@@ -360,6 +360,25 @@ int main(void) {
 			}
 			// second button rotates second row
 
+			if(buttonChange & (1 << 1)) {
+				switch(lcdtypes[3]) {
+					case TYPE_FUEL_NEED:
+						lcdtypes[3] = TYPE_FUEL;
+						lcdtypes[4] = TYPE_FUEL_NEED;
+						break;
+					case TYPE_FUEL:
+						lcdtypes[3] = TYPE_LAP;
+						lcdtypes[4] = TYPE_FUEL;
+						break;
+					case TYPE_LAP:
+						lcdtypes[3] = TYPE_LAPS_REM;
+						lcdtypes[4] = TYPE_LAP;
+						break;
+					default:
+						lcdtypes[3] = TYPE_FUEL_NEED;
+						lcdtypes[4] = TYPE_LAPS_REM;
+				}
+			}
 
 			// refresh everything
 			uint8_t i;
