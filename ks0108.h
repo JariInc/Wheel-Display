@@ -4,8 +4,8 @@
 
 #define RS (1 << 2)
 #define RW (1 << 4)
-#define CS1 (1 << 5)
-#define CS2 (1 << 6)
+#define CS1 (1 << 6)
+#define CS2 (1 << 5)
 #define EN (1 << 7)
 
 /* Data: PORTD */

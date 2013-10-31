@@ -127,10 +127,16 @@ bool CALLBACK_HID_Device_CreateHIDReport(USB_ClassInfo_HID_Device_t* const HIDIn
 	
 	JoystickReport->Button = 0x0000;
 
+	/*
 	for(row = 0; row < 4; row++) {
-		GPIOWrite(0, (1 << row) ^ 0x0f);
-		JoystickReport->Button |= ((GPIORead(0) >> 4) << (row << 2));
+		//GPIOWrite(0, (1 << row) ^ 0x0f);
+		//JoystickReport->Button |= ((GPIORead(0) >> 4) << (row << 2));
+		GPIOWrite(0, ((1 << row) ^ 0x0f) << 4);
+		JoystickReport->Button |= ((GPIORead(0) & 0x0f) << (row << 2));
 	}
+	*/
+	GPIOWrite(0, 1); //row 0
+	JoystickReport->Button = GPIORead(0);
 
 	// save rising edge
 	buttonChange = (prevButtonMask ^ JoystickReport->Button) & JoystickReport->Button;
@@ -329,7 +335,7 @@ int main(void) {
     // PWM for backlight
 	TCCR1A |= (1 << WGM11)|(1 << WGM10)|(1 << COM1C1)|(1 << COM1C0);
     TCCR1B |= (1 << WGM12)|(0 << WGM13)|(0 << CS12)|(1 << CS11)|(0 << CS10); // prescaling 64
-	data[TYPE_BACKLIGHT] = 1023;
+	data[TYPE_BACKLIGHT] = 512;
     OCR1C = data[TYPE_BACKLIGHT];
 	
 	sei();

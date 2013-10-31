@@ -23,7 +23,7 @@ char GPIORead(uint8_t bank) { 				// 0=bank a, 1=bank b
 
 
 void GPIOInit(void) {
-	GPIOSetDir(0xf0, 0x00); // set button control, button inputs and leds
+	GPIOSetDir(0x0f, 0x00); // set button control, button inputs and leds
 	GPIOWrite(0, 0xff); // set bank 1 high
 }
 
